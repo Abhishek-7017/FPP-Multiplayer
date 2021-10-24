@@ -2,34 +2,38 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(PlayerMotor))]
+//[RequireComponent(typeof(PlayerMotor))]
 public class PlayerController : MonoBehaviour
 {
+    [SerializeField] private CharacterController controller;
     [SerializeField] private float speed = 10f;
-    [SerializeField] private float RotationSpeed = 3f;
-    private PlayerMotor motor;
-    // Start is called before the first frame update
-    void Start()
-    {
-        motor = GetComponent<PlayerMotor>();
-    }
+    [SerializeField] private float gravity = -9.81f;
+
+    [SerializeField] Transform groundCheck;
+    [SerializeField] float groundDistance = 0.4f;
+    [SerializeField] LayerMask groundMask;
+
+    Vector3 velocity;
+    bool isGrounded;
 
     // Update is called once per frame
     void Update()
     {
+        isGrounded = Physics.CheckSphere(groundCheck.position,groundDistance,groundMask);
+        
+        if(isGrounded && velocity.y<0){
+            velocity.y = -2f;
+        }
+
         float xMove = Input.GetAxisRaw("Horizontal");
         float zMove = Input.GetAxisRaw("Vertical");
 
-        Vector3 xMoveHorizontal = transform.right * xMove;
-        Vector3 zMoveVertical = transform.forward * zMove;
+        Vector3 move = transform.right * xMove + transform.forward * zMove;
 
-        Vector3 velocity = (xMoveHorizontal+zMoveVertical).normalized * speed;
+        controller.Move(move * speed * Time.deltaTime);
+        velocity.y += gravity* Time.deltaTime;
+        controller.Move(velocity*Time.deltaTime);
 
-        float yRot = Input.GetAxisRaw("Mouse X");
-        float xRot = Input.GetAxisRaw("Mouse Y");
-
-        motor.Move(velocity);
-        motor.MoveRotation(new Vector3(0f,yRot,0f) * RotationSpeed);
-        motor.RotateCamera(new Vector3(xRot,0f,0f) * RotationSpeed);
+       
     }
 }
